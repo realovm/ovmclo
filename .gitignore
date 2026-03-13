@@ -1,0 +1,5 @@
+db/ovm.db
+db/ovm.db-wal
+db/ovm.db-shm
+node_modules
+.env

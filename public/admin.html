@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OVM CLO — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+SC:wght@300;400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:     #111111;
+  --ivory:     #faf8f3;
+  --parchment: #f2ede3;
+  --ecru:      #e8e0d0;
+  --red:       #d33e01;
+  --red-dim:   #9e1912;
+  --gold:      #b8975a;
+  --gold-lt:   #d4b87a;
+  --mid:       #5a5248;
+  --border:    #ddd8cc;
+  --green:     #4a7c59;
+  --sidebar:   220px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--parchment);
+  color: var(--black);
+  font-family: 'EB Garamond', serif;
+  min-height: 100vh;
+}
+
+/* ── LOGIN SCREEN ─────────────────────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--black);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  width: 420px; padding: 4rem 3.5rem;
+  border: 1px solid rgba(221,216,204,0.12);
+  background: rgba(250,248,243,0.03);
+  position: relative;
+}
+.login-box::before {
+  content: 'OVM';
+  position: absolute; top: -2rem; left: -1rem;
+  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+  font-size: 14rem; color: rgba(255,255,255,0.025);
+  line-height: 1; pointer-events: none; letter-spacing: -0.02em;
+}
+.login-eyebrow {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.35em; color: var(--gold); margin-bottom: 0.6rem;
+  display: flex; align-items: center; gap: 0.7rem;
+}
+.login-eyebrow::before { content:''; display:block; width:20px; height:1px; background:var(--gold); }
+.login-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 2.8rem; color: var(--ivory); line-height: 0.95;
+  margin-bottom: 0.4rem; position: relative; z-index: 1;
+}
+.login-title span { color: var(--red); font-style: italic; }
+.login-sub {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: 0.92rem; color: rgba(250,248,243,0.35);
+  margin-bottom: 2.5rem; position: relative; z-index: 1;
+}
+.login-field { margin-bottom: 1rem; position: relative; z-index: 1; }
+.login-label {
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 500;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(250,248,243,0.4); display: block; margin-bottom: 0.4rem;
+}
+.login-input {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(221,216,204,0.18);
+  color: var(--ivory); font-family: 'EB Garamond', serif;
+  font-size: 1rem; font-style: italic;
+  padding: 0.75rem 1rem; outline: none; transition: border-color 0.2s;
+}
+.login-input:focus { border-color: var(--gold); }
+.login-input::placeholder { color: rgba(250,248,243,0.2); }
+.login-btn {
+  width: 100%; background: var(--red); color: var(--ivory);
+  font-family: 'Cormorant SC', serif; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  padding: 0.9rem; border: none; cursor: pointer;
+  transition: background 0.2s; margin-top: 0.5rem;
+  position: relative; z-index: 1;
+}
+.login-btn:hover { background: var(--red-dim); }
+.login-error {
+  font-family: 'Cormorant SC', serif; font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.15em; color: var(--red);
+  margin-top: 0.8rem; display: none; position: relative; z-index: 1;
+}
+
+/* ── LAYOUT ───────────────────────────────────────────────────────── */
+#app { display: none; min-height: 100vh; }
+
+/* ── SIDEBAR ──────────────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar);
+  background: var(--black);
+  display: flex; flex-direction: column;
+  border-right: 1px solid rgba(221,216,204,0.08);
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 2rem 1.8rem 1.5rem;
+  border-bottom: 1px solid rgba(221,216,204,0.08);
+  flex-shrink: 0;
+}
+.sidebar-logo-text {
+  font-family: 'Cormorant SC', serif; font-size: 1.3rem; font-weight: 600;
+  letter-spacing: 0.2em; color: var(--ivory); display: block;
+}
+.sidebar-logo-text span { color: var(--red); }
+.sidebar-logo-sub {
+  font-family: 'Cormorant SC', serif; font-size: 0.52rem; font-weight: 500;
+  letter-spacing: 0.28em; color: rgba(250,248,243,0.25);
+  display: block; margin-top: 0.25rem;
+}
+.sidebar-nav { flex: 1; padding: 1.5rem 0; overflow-y: auto; }
+.nav-section-title {
+  font-family: 'Cormorant SC', serif; font-size: 0.48rem; font-weight: 600;
+  letter-spacing: 0.3em; color: rgba(250,248,243,0.2);
+  padding: 0.6rem 1.8rem; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.72rem 1.8rem; cursor: pointer;
+  font-family: 'Cormorant SC', serif; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: rgba(250,248,243,0.45); transition: all 0.2s;
+  border-left: 2px solid transparent; text-decoration: none;
+}
+.nav-item:hover { color: var(--ivory); background: rgba(255,255,255,0.04); }
+.nav-item.active { color: var(--ivory); border-left-color: var(--red); background: rgba(200,33,24,0.08); }
+.nav-icon { font-size: 0.85rem; width: 16px; text-align: center; flex-shrink: 0; }
+.sidebar-footer {
+  padding: 1.2rem 1.8rem;
+  border-top: 1px solid rgba(221,216,204,0.08);
+  flex-shrink: 0;
+}
+.sidebar-user {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.12em; color: rgba(250,248,243,0.35);
+  margin-bottom: 0.7rem;
+}
+.sidebar-user strong { color: rgba(250,248,243,0.7); display: block; margin-bottom: 0.1rem; }
+.logout-btn {
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 500;
+  letter-spacing: 0.2em; color: rgba(200,33,24,0.7); background: none;
+  border: none; cursor: pointer; transition: color 0.2s; text-transform: uppercase;
+}
+.logout-btn:hover { color: var(--red); }
+
+/* ── MAIN CONTENT ─────────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  background: var(--ivory); border-bottom: 1px solid var(--border);
+  padding: 1.1rem 2.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 1.7rem; letter-spacing: 0.01em; color: var(--black);
+}
+.topbar-title span { color: var(--red); font-style: italic; }
+.topbar-right { display: flex; align-items: center; gap: 1.2rem; }
+.topbar-date {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.15em; color: var(--mid);
+}
+.refresh-btn {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.18em; color: var(--mid); background: none;
+  border: 1px solid var(--border); padding: 0.45rem 1rem; cursor: pointer;
+  transition: all 0.2s; text-transform: uppercase;
+}
+.refresh-btn:hover { background: var(--black); color: var(--ivory); border-color: var(--black); }
+
+.content { padding: 2.5rem; flex: 1; }
+
+/* ── PAGES ────────────────────────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── STAT CARDS ───────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border); margin-bottom: 2.5rem;
+  border: 1px solid var(--border);
+}
+.stat-card {
+  background: var(--ivory); padding: 2rem 1.8rem;
+  position: relative; overflow: hidden;
+}
+.stat-card::after {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: var(--border);
+}
+.stat-card.accent::after { background: var(--red); }
+.stat-card.gold-accent::after { background: var(--gold); }
+.stat-card.green-accent::after { background: var(--green); }
+.stat-eyebrow {
+  font-family: 'Cormorant SC', serif; font-size: 0.52rem; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid);
+  margin-bottom: 0.8rem;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 3rem; line-height: 1; color: var(--black); margin-bottom: 0.3rem;
+}
+.stat-value.red { color: var(--red); }
+.stat-value.gold { color: var(--gold); }
+.stat-value.green { color: var(--green); }
+.stat-sub {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: 0.85rem; color: var(--mid);
+}
+
+/* ── SECTION HEADER ───────────────────────────────────────────────── */
+.section-hd {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding-bottom: 1rem; margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.section-hd-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 2rem; line-height: 1; color: var(--black);
+}
+.section-hd-title span { color: var(--red); font-style: italic; }
+.section-hd-sub {
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 500;
+  letter-spacing: 0.2em; color: var(--mid);
+}
+
+/* ── FILTER TABS ──────────────────────────────────────────────────── */
+.filter-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border: 1px solid var(--border); width: fit-content; }
+.filter-tab {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--mid); background: var(--ivory);
+  border: none; padding: 0.6rem 1.2rem; cursor: pointer;
+  transition: all 0.2s; border-right: 1px solid var(--border);
+}
+.filter-tab:last-child { border-right: none; }
+.filter-tab:hover { background: var(--parchment); color: var(--black); }
+.filter-tab.active { background: var(--black); color: var(--ivory); }
+
+/* ── TABLE ────────────────────────────────────────────────────────── */
+.table-wrap {
+  border: 1px solid var(--border); background: var(--ivory);
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--parchment); border-bottom: 1px solid var(--border); }
+th {
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  padding: 1rem 1.2rem; text-align: left; white-space: nowrap;
+}
+td {
+  padding: 1rem 1.2rem; border-bottom: 1px solid var(--border);
+  font-family: 'EB Garamond', serif; font-size: 0.95rem; color: var(--black);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--parchment); }
+.order-num {
+  font-family: 'Cormorant SC', serif; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--black);
+}
+.customer-name { font-weight: 500; }
+.customer-email { font-style: italic; color: var(--mid); font-size: 0.85rem; }
+.amount {
+  font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;
+  font-weight: 500; color: var(--black);
+}
+.date-cell {
+  font-family: 'Cormorant SC', serif; font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--mid);
+}
+
+/* ── STATUS BADGE ─────────────────────────────────────────────────── */
+.status {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 0.3rem 0.7rem; border: 1px solid currentColor;
+}
+.status-pending  { color: #b8800a; background: #fdf5e4; }
+.status-paid     { color: var(--green); background: #eef5f1; }
+.status-shipped  { color: #1a6fa8; background: #e6f2fa; }
+.status-delivered{ color: var(--mid); background: var(--parchment); }
+.status-cancelled{ color: var(--red); background: #fdf0ef; }
+
+/* ── STATUS SELECT ────────────────────────────────────────────────── */
+.status-select {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--parchment); border: 1px solid var(--border);
+  color: var(--black); padding: 0.4rem 0.6rem; cursor: pointer;
+  outline: none; transition: border-color 0.2s;
+}
+.status-select:focus { border-color: var(--gold); }
+
+/* ── ORDER DETAIL MODAL ───────────────────────────────────────────── */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(17,15,12,0.6);
+  z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#modal-overlay.open { opacity: 1; pointer-events: all; }
+#order-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-48%);
+  width: min(700px, calc(100vw - 4rem));
+  max-height: calc(100vh - 4rem); overflow-y: auto;
+  background: var(--ivory); border: 1px solid var(--border);
+  z-index: 501; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+#order-modal.open {
+  opacity: 1; pointer-events: all; transform: translate(-50%,-50%);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.8rem 2rem; border-bottom: 1px solid var(--border);
+  background: var(--parchment); position: sticky; top: 0;
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 1.5rem; color: var(--black);
+}
+.modal-title span { color: var(--red); font-style: italic; }
+.modal-close {
+  background: none; border: 1px solid var(--border); font-size: 1rem;
+  color: var(--mid); cursor: pointer; width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.modal-close:hover { background: var(--black); color: var(--ivory); border-color: var(--black); }
+.modal-body { padding: 2rem; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+.modal-section-title {
+  font-family: 'Cormorant SC', serif; font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.25em; color: var(--mid); text-transform: uppercase;
+  margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);
+}
+.modal-field { margin-bottom: 0.7rem; }
+.modal-label {
+  font-family: 'Cormorant SC', serif; font-size: 0.52rem; font-weight: 500;
+  letter-spacing: 0.2em; color: var(--mid); display: block; margin-bottom: 0.15rem;
+}
+.modal-value {
+  font-family: 'EB Garamond', serif; font-size: 1rem; color: var(--black);
+}
+.modal-items-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+.modal-items-table th {
+  font-family: 'Cormorant SC', serif; font-size: 0.52rem; font-weight: 600;
+  letter-spacing: 0.2em; color: var(--mid); padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border); text-align: left;
+}
+.modal-items-table td {
+  padding: 0.8rem; border-bottom: 1px solid var(--border);
+  font-family: 'EB Garamond', serif; font-size: 0.95rem;
+}
+.modal-total-row {
+  display: flex; justify-content: space-between;
+  padding: 0.5rem 0; border-top: 1px solid var(--border); margin-top: 0.5rem;
+  font-family: 'Cormorant SC', serif; font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--mid);
+}
+.modal-total-row.grand {
+  font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500;
+  color: var(--black); letter-spacing: 0.02em; padding-top: 0.8rem;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────────────── */
+.empty-state {
+  padding: 5rem 2rem; text-align: center;
+  border: 1px solid var(--border); background: var(--ivory);
+}
+.empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+.empty-state-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic;
+  font-size: 2rem; color: var(--black); margin-bottom: 0.5rem;
+}
+.empty-state-sub {
+  font-family: 'Cormorant SC', serif; font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.2em; color: var(--mid);
+}
+
+/* ── LOADING ──────────────────────────────────────────────────────── */
+.loading {
+  padding: 4rem; text-align: center;
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 1.4rem; color: var(--mid);
+}
+
+/* ── TOAST ────────────────────────────────────────────────────────── */
+.toast-wrap {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+  display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;
+}
+.toast {
+  background: var(--black); color: var(--ivory);
+  font-family: 'Cormorant SC', serif; font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.1em; padding: 0.8rem 1.2rem; max-width: 300px;
+  border-left: 3px solid var(--red);
+  transform: translateX(130%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.toast.show { transform: translateX(0); }
+.toast.ok   { border-left-color: var(--green); }
+
+/* ── NEWSLETTER PAGE ──────────────────────────────────────────────── */
+.nl-list { border: 1px solid var(--border); background: var(--ivory); }
+.nl-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border);
+}
+.nl-item:last-child { border-bottom: none; }
+.nl-email {
+  font-family: 'EB Garamond', serif; font-style: italic; font-size: 1rem; color: var(--black);
+}
+.nl-date {
+  font-family: 'Cormorant SC', serif; font-size: 0.55rem; font-weight: 500;
+  letter-spacing: 0.12em; color: var(--mid);
+}
+
+/* ── REVENUE CHART ────────────────────────────────────────────────── */
+.chart-wrap {
+  background: var(--ivory); border: 1px solid var(--border);
+  padding: 2rem; margin-bottom: 2.5rem;
+}
+.chart-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 1.4rem; margin-bottom: 1.5rem; color: var(--black);
+}
+.chart-bars {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 140px; padding-bottom: 2rem; position: relative;
+}
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.chart-bar {
+  width: 100%; background: var(--ecru);
+  transition: height 0.6s ease, background 0.2s;
+  min-height: 2px; cursor: pointer; position: relative;
+}
+.chart-bar:hover { background: var(--red); }
+.chart-bar-val {
+  font-family: 'Cormorant SC', serif; font-size: 0.45rem; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--mid); white-space: nowrap;
+}
+.chart-bar-label {
+  font-family: 'Cormorant SC', serif; font-size: 0.48rem; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--mid);
+  position: absolute; bottom: -1.6rem; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="modal-overlay"></div>
+<div id="order-modal">
+  <div class="modal-header">
+    <div class="modal-title">Order <span id="modal-order-num"></span></div>
+    <button class="modal-close" id="modal-close-btn">✕</button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+</div>
+
+<!-- ── LOGIN SCREEN ──────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-eyebrow">Admin Portal</div>
+    <h1 class="login-title">OVM <span>CLO</span></h1>
+    <p class="login-sub">Sign in to manage your brand.</p>
+
+    <div class="login-field">
+      <label class="login-label">Email Address</label>
+      <input class="login-input" id="l-email" type="email" placeholder="admin@ovmclo.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="login-btn">Enter Dashboard →</button>
+    <div class="login-error" id="login-error">Invalid credentials. Please try again.</div>
+  </div>
+</div>
+
+<!-- ── APP SHELL ─────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-text">OVM <span>CLO</span></span>
+      <span class="sidebar-logo-sub">Admin Dashboard</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </a>
+
+      <div class="nav-section-title" style="margin-top:1rem;">Orders</div>
+      <a class="nav-item" data-page="orders">
+        <span class="nav-icon">◻</span> All Orders
+      </a>
+      <a class="nav-item" data-page="orders-pending">
+        <span class="nav-icon">◷</span> Pending
+      </a>
+      <a class="nav-item" data-page="orders-shipped">
+        <span class="nav-icon">◈</span> Shipped
+      </a>
+
+      <div class="nav-section-title" style="margin-top:1rem;">Brand</div>
+      <a class="nav-item" data-page="newsletter">
+        <span class="nav-icon">✉</span> Newsletter
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <strong id="sidebar-name">Admin</strong>
+        Logged in as admin
+      </div>
+      <button class="logout-btn" id="logout-btn">Sign Out →</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard <span>Overview</span></div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+        <button class="refresh-btn" id="refresh-btn">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD PAGE ──────────────────────────────────────── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="loading">Loading stats…</div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-title">Recent Orders — Last 10</div>
+          <div class="chart-bars" id="chart-bars">
+            <div class="loading" style="width:100%">Loading chart…</div>
+          </div>
+        </div>
+
+        <div class="section-hd">
+          <div>
+            <div class="section-hd-title">Latest <span>Orders</span></div>
+            <div class="section-hd-sub">Most recent 10 transactions</div>
+          </div>
+        </div>
+        <div id="dashboard-orders-wrap">
+          <div class="loading">Loading orders…</div>
+        </div>
+      </div>
+
+      <!-- ── ALL ORDERS PAGE ─────────────────────────────────────── -->
+      <div class="page" id="page-orders">
+        <div class="section-hd">
+          <div>
+            <div class="section-hd-title">All <span>Orders</span></div>
+            <div class="section-hd-sub" id="orders-count-label">—</div>
+          </div>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-status="">All</button>
+          <button class="filter-tab" data-status="pending">Pending</button>
+          <button class="filter-tab" data-status="paid">Paid</button>
+          <button class="filter-tab" data-status="shipped">Shipped</button>
+          <button class="filter-tab" data-status="delivered">Delivered</button>
+          <button class="filter-tab" data-status="cancelled">Cancelled</button>
+        </div>
+        <div id="orders-table-wrap">
+          <div class="loading">Loading orders…</div>
+        </div>
+      </div>
+
+      <!-- ── PENDING PAGE ────────────────────────────────────────── -->
+      <div class="page" id="page-orders-pending">
+        <div class="section-hd">
+          <div>
+            <div class="section-hd-title">Pending <span>Orders</span></div>
+            <div class="section-hd-sub">Awaiting payment confirmation</div>
+          </div>
+        </div>
+        <div id="pending-table-wrap">
+          <div class="loading">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── SHIPPED PAGE ────────────────────────────────────────── -->
+      <div class="page" id="page-orders-shipped">
+        <div class="section-hd">
+          <div>
+            <div class="section-hd-title">Shipped <span>Orders</span></div>
+            <div class="section-hd-sub">In transit to customers</div>
+          </div>
+        </div>
+        <div id="shipped-table-wrap">
+          <div class="loading">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── NEWSLETTER PAGE ─────────────────────────────────────── -->
+      <div class="page" id="page-newsletter">
+        <div class="section-hd">
+          <div>
+            <div class="section-hd-title">Newsletter <span>Subscribers</span></div>
+            <div class="section-hd-sub" id="nl-count-label">—</div>
+          </div>
+        </div>
+        <div id="nl-wrap">
+          <div class="loading">Loading subscribers…</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────
+let token      = sessionStorage.getItem('ovm_admin_token') || null;
+let adminUser  = null;
+let allOrders  = [];
+let currentFilterStatus = '';
+
+// ─── TOAST ─────────────────────────────────────────────────────────
+function toast(msg, type = '') {
+  const wrap = document.getElementById('toasts');
+  const el   = document.createElement('div');
+  el.className   = `toast${type ? ' ' + type : ''}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 4000);
+}
+
+// ─── API ────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const res  = await fetch(path, { ...opts, headers });
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    return { ok: false, error: 'Network error — is the server running?' };
+  }
+}
+
+// ─── DATE HELPERS ───────────────────────────────────────────────────
+function fmtDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return d.toLocaleDateString('en-NG', { day:'2-digit', month:'short', year:'numeric' }) +
+    '  ' + d.toLocaleTimeString('en-NG', { hour:'2-digit', minute:'2-digit' });
+}
+function fmtMoney(n) {
+  return '₦' + (n || 0).toLocaleString('en-NG');
+}
+
+// ─── LOGIN ──────────────────────────────────────────────────────────
+document.getElementById('login-btn').onclick = doLogin;
+document.getElementById('l-pass').onkeydown = e => { if (e.key === 'Enter') doLogin(); };
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in…';
+  btn.disabled    = true;
+
+  const res = await api('/api/auth/login', {
+    method: 'POST',
+    body:   JSON.stringify({ email, password: pass }),
+  });
+
+  if (!res.ok) {
+    errEl.style.display = 'block';
+    btn.textContent = 'Enter Dashboard →';
+    btn.disabled    = false;
+    return;
+  }
+
+  // Server returns { ok, data: { user, token } }
+  const user = res.data.user || res.data;
+  const tok  = res.data.token || res.token || null;
+
+  if (user.role !== 'admin') {
+    errEl.textContent   = 'Access denied — admin accounts only.';
+    errEl.style.display = 'block';
+    btn.textContent     = 'Enter Dashboard →';
+    btn.disabled        = false;
+    return;
+  }
+
+  token     = tok;
+  adminUser = user;
+  sessionStorage.setItem('ovm_admin_token', token || '');
+  document.getElementById('sidebar-name').textContent =
+    `${adminUser.first_name || 'Admin'} ${adminUser.last_name || ''}`.trim();
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display          = 'block';
+
+  initApp();
+}
+
+// ─── INIT APP ───────────────────────────────────────────────────────
+function initApp() {
+  setTopbarDate();
+  loadDashboard();
+  setupNav();
+  document.getElementById('refresh-btn').onclick = refreshCurrentPage;
+  document.getElementById('logout-btn').onclick  = doLogout;
+  document.getElementById('modal-overlay').onclick = closeModal;
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  setupFilterTabs();
+}
+
+function setTopbarDate() {
+  const d = new Date();
+  document.getElementById('topbar-date').textContent =
+    d.toLocaleDateString('en-NG', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function doLogout() {
+  sessionStorage.removeItem('ovm_admin_token');
+  token     = null;
+  adminUser = null;
+  document.getElementById('app').style.display          = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-pass').value = '';
+}
+
+// ─── NAV ────────────────────────────────────────────────────────────
+const PAGE_TITLES = {
+  'dashboard':       'Dashboard <span>Overview</span>',
+  'orders':          'All <span>Orders</span>',
+  'orders-pending':  'Pending <span>Orders</span>',
+  'orders-shipped':  'Shipped <span>Orders</span>',
+  'newsletter':      'Newsletter <span>Subscribers</span>',
+};
+
+function setupNav() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.onclick = () => switchPage(item.dataset.page);
+  });
+}
+
+let currentPage = 'dashboard';
+
+function switchPage(page) {
+  currentPage = page;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.page === page);
+  });
+
+  document.getElementById('topbar-title').innerHTML = PAGE_TITLES[page] || page;
+
+  // load data for the page
+  if (page === 'dashboard')        loadDashboard();
+  if (page === 'orders')           loadOrders();
+  if (page === 'orders-pending')   loadPending();
+  if (page === 'orders-shipped')   loadShipped();
+  if (page === 'newsletter')       loadNewsletter();
+}
+
+function refreshCurrentPage() {
+  switchPage(currentPage);
+  toast('Data refreshed', 'ok');
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────────
+async function loadDashboard() {
+  const res = await api('/api/admin/dashboard');
+  if (!res.ok) { toast(res.error || 'Failed to load dashboard', ''); return; }
+
+  const d = res.data;
+
+  // Stats cards
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card accent">
+      <div class="stat-eyebrow">Total Orders</div>
+      <div class="stat-value red">${d.total_orders}</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card gold-accent">
+      <div class="stat-eyebrow">Revenue (Paid)</div>
+      <div class="stat-value gold">${fmtMoney(d.revenue)}</div>
+      <div class="stat-sub">Confirmed payments</div>
+    </div>
+    <div class="stat-card green-accent">
+      <div class="stat-eyebrow">Customers</div>
+      <div class="stat-value green">${d.customers}</div>
+      <div class="stat-sub">Registered accounts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-eyebrow">Subscribers</div>
+      <div class="stat-value">${d.subscribers}</div>
+      <div class="stat-sub">Newsletter list</div>
+    </div>
+  `;
+
+  // Chart — recent 10 orders by amount
+  const orders = d.recent_orders || [];
+  if (orders.length) {
+    const maxAmt = Math.max(...orders.map(o => o.total || 0)) || 1;
+    document.getElementById('chart-bars').innerHTML = orders.slice().reverse().map(o => `
+      <div class="chart-bar-wrap">
+        <div class="chart-bar-val">${fmtMoney(o.total)}</div>
+        <div class="chart-bar" style="height:${Math.max(4, (o.total/maxAmt)*110)}px" title="${o.order_number} — ${fmtMoney(o.total)}"></div>
+        <div class="chart-bar-label">${(o.order_number||'').slice(-4)}</div>
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('chart-bars').innerHTML = '<div class="loading">No orders yet</div>';
+  }
+
+  // Recent orders table
+  document.getElementById('dashboard-orders-wrap').innerHTML =
+    orders.length ? buildTable(orders) : emptyState('No orders yet', 'New orders will appear here.');
+}
+
+// ─── ALL ORDERS ─────────────────────────────────────────────────────
+async function loadOrders(status = '') {
+  document.getElementById('orders-table-wrap').innerHTML = '<div class="loading">Loading…</div>';
+  const url = '/api/admin/orders' + (status ? `?status=${status}` : '');
+  const res = await api(url);
+  if (!res.ok) { toast(res.error, ''); return; }
+
+  allOrders = res.data || [];
+  document.getElementById('orders-count-label').textContent = `${allOrders.length} order${allOrders.length !== 1 ? 's' : ''}`;
+  document.getElementById('orders-table-wrap').innerHTML =
+    allOrders.length ? buildTable(allOrders) : emptyState('No orders found', 'Try a different filter.');
+}
+
+async function loadPending() {
+  document.getElementById('pending-table-wrap').innerHTML = '<div class="loading">Loading…</div>';
+  const res = await api('/api/admin/orders?status=pending');
+  if (!res.ok) { toast(res.error, ''); return; }
+  const orders = res.data || [];
+  document.getElementById('pending-table-wrap').innerHTML =
+    orders.length ? buildTable(orders) : emptyState('No pending orders', 'All caught up!');
+}
+
+async function loadShipped() {
+  document.getElementById('shipped-table-wrap').innerHTML = '<div class="loading">Loading…</div>';
+  const res = await api('/api/admin/orders?status=shipped');
+  if (!res.ok) { toast(res.error, ''); return; }
+  const orders = res.data || [];
+  document.getElementById('shipped-table-wrap').innerHTML =
+    orders.length ? buildTable(orders) : emptyState('No shipped orders', 'Mark orders as shipped to see them here.');
+}
+
+// ─── FILTER TABS ────────────────────────────────────────────────────
+function setupFilterTabs() {
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilterStatus = tab.dataset.status;
+      loadOrders(currentFilterStatus);
+    };
+  });
+}
+
+// ─── TABLE BUILDER ──────────────────────────────────────────────────
+function buildTable(orders) {
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Update Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td><span class="order-num">${o.order_number || '—'}</span></td>
+              <td>
+                <div class="customer-name">${o.shipping_name || '—'}</div>
+                <div class="customer-email">${o.shipping_email || ''}</div>
+              </td>
+              <td><span style="font-family:'Cormorant SC',serif;font-size:0.7rem;letter-spacing:0.1em;">${o.item_count || '—'} item${(o.item_count||0) !== 1 ? 's' : ''}</span></td>
+              <td><span class="amount">${fmtMoney(o.total)}</span></td>
+              <td><span class="status status-${o.status || 'pending'}">${o.status || 'pending'}</span></td>
+              <td>
+                <select class="status-select" onchange="updateStatus(${o.id}, this.value)">
+                  <option value="pending"   ${o.status==='pending'   ? 'selected':''}>Pending</option>
+                  <option value="paid"      ${o.status==='paid'      ? 'selected':''}>Paid</option>
+                  <option value="shipped"   ${o.status==='shipped'   ? 'selected':''}>Shipped</option>
+                  <option value="delivered" ${o.status==='delivered' ? 'selected':''}>Delivered</option>
+                  <option value="cancelled" ${o.status==='cancelled' ? 'selected':''}>Cancelled</option>
+                </select>
+              </td>
+              <td><span class="date-cell">${fmtDate(o.created_at)}</span></td>
+              <td>
+                <button onclick="openOrderModal(${o.id})"
+                  style="font-family:'Cormorant SC',serif;font-size:0.55rem;font-weight:500;letter-spacing:0.15em;
+                  background:none;border:1px solid var(--border);color:var(--mid);padding:0.35rem 0.7rem;
+                  cursor:pointer;transition:all 0.2s;text-transform:uppercase;"
+                  onmouseover="this.style.background='var(--black)';this.style.color='var(--ivory)'"
+                  onmouseout="this.style.background='none';this.style.color='var(--mid)'">
+                  View →
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ─── UPDATE STATUS ──────────────────────────────────────────────────
+async function updateStatus(orderId, newStatus) {
+  const res = await api(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    body:   JSON.stringify({ status: newStatus }),
+  });
+
+  if (res.ok) {
+    toast(`Order updated to "${newStatus}"`, 'ok');
+  } else {
+    toast(res.error || 'Failed to update order status', '');
+  }
+}
+
+// ─── ORDER MODAL ────────────────────────────────────────────────────
+async function openOrderModal(orderId) {
+  document.getElementById('modal-order-num').textContent = '#' + orderId;
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Loading order details…</div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('order-modal').classList.add('open');
+
+  const res = await api(`/api/orders/${orderId}`);
+  if (!res.ok) {
+    document.getElementById('modal-body').innerHTML = `<p style="color:var(--red);font-family:'EB Garamond',serif;padding:2rem;">${res.error}</p>`;
+    return;
+  }
+
+  const o = res.data;
+  document.getElementById('modal-order-num').textContent = o.order_number;
+
+  const items = o.items || [];
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-grid">
+      <div>
+        <div class="modal-section-title">Customer Details</div>
+        <div class="modal-field"><span class="modal-label">Name</span><span class="modal-value">${o.shipping_name || '—'}</span></div>
+        <div class="modal-field"><span class="modal-label">Email</span><span class="modal-value" style="font-style:italic;">${o.shipping_email || '—'}</span></div>
+        <div class="modal-field"><span class="modal-label">Phone</span><span class="modal-value">${o.shipping_phone || '—'}</span></div>
+      </div>
+      <div>
+        <div class="modal-section-title">Delivery Address</div>
+        <div class="modal-field"><span class="modal-label">Address</span><span class="modal-value">${o.shipping_address || '—'}</span></div>
+        <div class="modal-field"><span class="modal-label">City</span><span class="modal-value">${o.shipping_city || '—'}</span></div>
+        <div class="modal-field"><span class="modal-label">State</span><span class="modal-value">${o.shipping_state || '—'}</span></div>
+        <div class="modal-field"><span class="modal-label">Country</span><span class="modal-value">${o.shipping_country || 'Nigeria'}</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="modal-section-title">Order Items</div>
+      <table class="modal-items-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Size</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.length ? items.map(it => `
+            <tr>
+              <td>${it.product_name || it.name || '—'}</td>
+              <td style="font-family:'Cormorant SC',serif;font-size:0.65rem;letter-spacing:0.1em;">${it.size || '—'}</td>
+              <td>${it.quantity}</td>
+              <td>${fmtMoney(it.unit_price)}</td>
+              <td style="font-weight:500;">${fmtMoney(it.total_price)}</td>
+            </tr>
+          `).join('') : `<tr><td colspan="5" style="font-style:italic;color:var(--mid);text-align:center;padding:1.5rem;">No item details saved</td></tr>`}
+        </tbody>
+      </table>
+
+      <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1rem;">
+        <div class="modal-total-row"><span>Subtotal</span><span>${fmtMoney(o.subtotal)}</span></div>
+        <div class="modal-total-row"><span>Shipping</span><span>${o.shipping === 0 ? '<span style="color:var(--green);font-weight:700">FREE</span>' : fmtMoney(o.shipping)}</span></div>
+        <div class="modal-total-row grand"><span>Total</span><span style="color:var(--red);">${fmtMoney(o.total)}</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <span class="modal-label">Order Status</span>
+        <div style="margin-top:0.3rem;">
+          <span class="status status-${o.status || 'pending'}">${o.status || 'pending'}</span>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <span class="modal-label">Order Date</span>
+        <div class="modal-value" style="font-style:italic;">${fmtDate(o.created_at)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('order-modal').classList.remove('open');
+}
+
+// ─── NEWSLETTER ─────────────────────────────────────────────────────
+async function loadNewsletter() {
+  document.getElementById('nl-wrap').innerHTML = '<div class="loading">Loading subscribers…</div>';
+
+  // The backend newsletter list is admin-only via dashboard data
+  const res = await api('/api/admin/dashboard');
+  if (!res.ok) { toast(res.error, ''); return; }
+
+  const count = res.data.subscribers;
+  document.getElementById('nl-count-label').textContent = `${count} subscriber${count !== 1 ? 's' : ''}`;
+
+  // Note: backend returns count only in dashboard — show info state
+  document.getElementById('nl-wrap').innerHTML = `
+    <div style="background:var(--ivory);border:1px solid var(--border);padding:2rem 1.5rem;margin-bottom:1.5rem;text-align:center;">
+      <div style="font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:4rem;color:var(--red);line-height:1;">${count}</div>
+      <div style="font-family:'Cormorant SC',serif;font-size:0.65rem;font-weight:500;letter-spacing:0.25em;color:var(--mid);">TOTAL SUBSCRIBERS</div>
+    </div>
+    <div id="nl-emails-wrap"><div class="loading">Loading emails…</div></div>
+  `;
+  loadSubscriberEmails();
+}
+async function loadSubscriberEmails() {
+  const res = await api('/api/newsletter/list');
+  if (!res.ok) {
+    document.getElementById('nl-emails-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-state-title">Could not load emails</div></div>';
+    return;
+  }
+
+  const emails = res.data || [];
+  if (!emails.length) {
+    document.getElementById('nl-emails-wrap').innerHTML =
+      emptyState('No subscribers yet', 'Subscribers will appear here.');
+    return;
+  }
+
+  document.getElementById('nl-emails-wrap').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Subscribed</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${emails.map((s, i) => `
+            <tr>
+              <td style="font-family:'Cormorant SC',serif;font-size:0.65rem;color:var(--mid);">${i + 1}</td>
+              <td style="font-style:italic;">${s.email}</td>
+              <td class="date-cell">${fmtDate(s.subscribed_at)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ─── EMPTY STATE ────────────────────────────────────────────────────
+function emptyState(title, sub) {
+  return `
+    <div class="empty-state">
+      <div class="empty-state-icon">◻</div>
+      <div class="empty-state-title">${title}</div>
+      <div class="empty-state-sub">${sub}</div>
+    </div>`;
+}
+
+// ─── AUTO-LOGIN if token stored ─────────────────────────────────────
+(async () => {
+  if (!token) return;
+  const res  = await api('/api/auth/me');
+  const user = res.data?.user || res.data;
+  if (res.ok && user?.role === 'admin') {
+    adminUser = user;
+    document.getElementById('sidebar-name').textContent =
+      `${adminUser.first_name || 'Admin'} ${adminUser.last_name || ''}`.trim();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display          = 'block';
+    initApp();
+  } else {
+    sessionStorage.removeItem('ovm_admin_token');
+    token = null;
+  }
+})();
+</script>
+</body>
+</html>
