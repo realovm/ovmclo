@@ -3,3 +3,4 @@ db/ovm.db-wal
 db/ovm.db-shm
 node_modules
 .env
+public/images/
